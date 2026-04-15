@@ -1,13 +1,19 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import engine
+from app.models import Base
+from app.routes import tools, news
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="AI Tools Discovery Platform",
-    description="An advanced AI Tools discovery platform",
+    title="AI Tools Discovery Platform API",
+    description="An advanced AI Tools discovery platform with real-time news and notifications",
     version="1.0.0"
 )
 
-# Enable CORS
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,13 +22,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(tools.router)
+app.include_router(news.router)
+
 @app.get("/")
 async def root():
-    return {"message": "AI Tools Discovery Platform API"}
+    return {
+        "message": "Welcome to AI Tools Discovery Platform API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "endpoints": {
+            "tools": "/api/tools",
+            "news": "/api/news",
+            "api_docs": "/docs"
+        }
+    }
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "message": "API is running"}
 
 if __name__ == "__main__":
     import uvicorn
